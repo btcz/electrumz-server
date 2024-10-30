@@ -1,5 +1,5 @@
 [Unit]
-Description=Electrumz
+Description=ElectrumZ
 After=network.target
 
 [Service]

@@ -4,7 +4,7 @@
 ###############
 
 # configure electrumz
-export COIN=Bitcoin
+export COIN=BitcoinZ
 export DAEMON_URL=http://rpcuser:rpcpassword@127.0.0.1
 export NET=mainnet
 export CACHE_MB=400

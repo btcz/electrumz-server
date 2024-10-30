@@ -22,6 +22,6 @@ sudo apt-get install git
 sudo pip3 install plyvel
 
 # install electrumz
-git clone https://github.com/btcz/electrumz-server.git
-cd electrumz
+git clone https://github.com/ezzygarmyz/electrumz-server.git
+cd electrumz-server
 sudo python3 setup.py install

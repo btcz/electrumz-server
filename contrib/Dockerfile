@@ -44,4 +44,4 @@ EXPOSE 50001 50002 50004 8000
 WORKDIR /opt/electrumz
 
 
-CMD ["/opt/electrumz/venv/bin/python", "electrumx_server"]
+CMD ["/opt/electrumz/env/bin/python", "electrumz_server"]
