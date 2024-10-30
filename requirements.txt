@@ -3,3 +3,8 @@ attrs
 plyvel
 aiohttp>=3.3,<4
 uvloop
+objgraph
+python-rapidjson
+ujson
+blake256
+pycryptodomex
