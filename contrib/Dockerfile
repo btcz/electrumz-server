@@ -1,48 +1,47 @@
-# example of Dockerfile that installs spesmilo electrumz 1.16.0
-# ENV variables can be overridden on the `docker run` command
+FROM ubuntu:20.04
 
-FROM python:3.9.16-bullseye AS builder
-
-WORKDIR /usr/src/app
-
-# Install the libs needed by rocksdb (including development headers)
-RUN apt-get update \
-    && apt-get -y --no-install-recommends install \
-        librocksdb-dev libsnappy-dev libbz2-dev libz-dev liblz4-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN python -m venv venv \
-    && venv/bin/pip install --no-cache-dir e-x[rapidjson,rocksdb]==1.16.0
+ENV DEBIAN_FRONTEND=noninteractive
 
 
-FROM python:3.9.16-slim-bullseye
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get update && \
+    apt-get install -y python3 python3-dev python3-venv git openssl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install the libs needed by rocksdb (no development headers or statics)
-RUN apt-get update \
-    && apt-get -y --no-install-recommends install \
-        librocksdb6.11 libsnappy1v5 libbz2-1.0 zlib1g liblz4-1 \
-    && rm -rf /var/lib/apt/lists/*
 
-ENV SERVICES="tcp://:50001"
-ENV COIN=Bitcoin
-ENV DB_DIRECTORY=/var/lib/electrumz
-ENV DAEMON_URL="http://username:password@hostname:port/"
-ENV ALLOW_ROOT=true
-ENV DB_ENGINE=rocksdb
-ENV MAX_SEND=10000000
-ENV BANDWIDTH_UNIT_COST=50000
-ENV CACHE_MB=2000
+RUN git clone https://github.com/ezzygarmyz/electrumz-server.git /opt/electrumz
 
-WORKDIR /usr/src/app
-COPY --from=builder /usr/src/app .
 
-VOLUME /var/lib/electrumz
+RUN python3 -m venv /opt/electrumz/env && \
+    /bin/bash -c "source /opt/electrumz/env/bin/activate && \
+    pip install --upgrade pip && \
+    pip install -r /opt/electrumz/requirements.txt && \
+    rm -rf ~/.cache/pip"
 
-RUN mkdir -p "$DB_DIRECTORY" && ulimit -n 1048576
 
-CMD ["/usr/src/app/venv/bin/python", "/usr/src/app/venv/bin/electrumz_server"]
+RUN mkdir -p /data && \
+    openssl req -newkey rsa:2048 -sha256 -nodes -keyout /data/electrumz.key -x509 -days 1095 -out /data/electrumz.crt -subj "/O=ElectrumZ"
 
-# build it with eg.: `docker build -t electrumz .`
-# run it with eg.:
-# `docker run -d --net=host -v /home/electrumz/db/:/var/lib/electrumz -e DAEMON_URL="http://youruser:yourpass@localhost:8332" -e REPORT_SERVICES=tcp://example.com:50001 electrumz`
-# for a clean shutdown, send TERM signal to the running container eg.: `docker kill --signal="TERM" CONTAINER_ID`
+
+ENV SERVICES=tcp://:50001,ssl://:50002,wss://:50004,rpc://0.0.0.0:8000
+ENV COIN=BitcoinZ
+ENV DB_DIRECTORY=/data
+ENV EVENT_LOOP_POLICY=uvloop
+ENV ALLOW_ROOT=1
+ENV SSL_CERTFILE=${DB_DIRECTORY}/electrumz.crt
+ENV SSL_KEYFILE=${DB_DIRECTORY}/electrumz.key
+ENV DB_ENGINE=leveldb
+ENV CACHE_MB=1200
+#ENV DAEMON_URL="http://rpcuser:rpcpassword@host.docker.internal:1979"
+#ENV REPORT_SERVICES="tcp://example.com:50001,ssl://example.com:50002,wss://example.com:50004"
+
+
+EXPOSE 50001 50002 50004 8000
+
+WORKDIR /opt/electrumz
+
+
+CMD ["/opt/electrumz/venv/bin/python", "electrumx_server"]
