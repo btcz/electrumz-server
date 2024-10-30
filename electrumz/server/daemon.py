@@ -18,14 +18,14 @@ from typing import TYPE_CHECKING, Type
 import aiohttp
 from aiorpcx import JSONRPC
 
-from electrumx.lib.hash import hash_to_hex_str, hex_str_to_hash
-from electrumx.lib.tx import DeserializerDecred
-from electrumx.lib.util import (class_logger, hex_to_bytes, json_deserialize,
+from electrumz.lib.hash import hash_to_hex_str, hex_str_to_hash
+from electrumz.lib.tx import DeserializerDecred
+from electrumz.lib.util import (class_logger, hex_to_bytes, json_deserialize,
                                 json_serialize, pack_varint,
                                 unpack_le_uint16_from)
 
 if TYPE_CHECKING:
-    from electrumx.lib.coins import Coin
+    from electrumz.lib.coins import Coin
 
 
 class DaemonError(Exception):

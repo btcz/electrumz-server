@@ -11,7 +11,7 @@ import os
 from functools import partial
 from typing import Type
 
-import electrumx.lib.util as util
+import electrumz.lib.util as util
 
 
 def db_class(name) -> Type['Storage']:

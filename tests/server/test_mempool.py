@@ -9,11 +9,11 @@ from random import randrange, choice, seed
 import pytest
 from aiorpcx import Event, sleep, ignore_after
 
-from electrumx.server.mempool import MemPool, MemPoolAPI
-from electrumx.lib.coins import BitcoinCash
-from electrumx.lib.hash import HASHX_LEN, hex_str_to_hash, hash_to_hex_str
-from electrumx.lib.tx import Tx, TxInput, TxOutput
-from electrumx.lib.util import OldTaskGroup
+from electrumz.server.mempool import MemPool, MemPoolAPI
+from electrumz.lib.coins import BitcoinCash
+from electrumz.lib.hash import HASHX_LEN, hex_str_to_hash, hash_to_hex_str
+from electrumz.lib.tx import Tx, TxInput, TxOutput
+from electrumz.lib.util import OldTaskGroup
 
 
 coin = BitcoinCash

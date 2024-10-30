@@ -5,10 +5,10 @@ from os import environ, urandom
 
 import pytest
 
-from electrumx.lib.hash import HASHX_LEN
-from electrumx.lib.util import pack_be_uint16, pack_le_uint64
-from electrumx.server.env import Env
-from electrumx.server.db import DB
+from electrumz.lib.hash import HASHX_LEN
+from electrumz.lib.util import pack_be_uint16, pack_le_uint64
+from electrumz.server.env import Env
+from electrumz.server.db import DB
 
 
 def create_histories(history, hashX_count=100):

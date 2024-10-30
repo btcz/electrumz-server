@@ -1,6 +1,6 @@
 import pytest
 
-import electrumx.lib.tx_dash as lib_tx_dash
+import electrumz.lib.tx_dash as lib_tx_dash
 
 
 bfh = bytes.fromhex

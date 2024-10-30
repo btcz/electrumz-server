@@ -6,7 +6,7 @@ import setuptools
 
 def find_version():
     tld = os.path.abspath(os.path.dirname(__file__))
-    filename = os.path.join(tld, 'electrumx', '__init__.py')
+    filename = os.path.join(tld, 'electrumz', '__init__.py')
     with open(filename) as f:
         text = f.read()
     match = re.search(r"^__version__ = \"(.*)\"$", text, re.MULTILINE)
@@ -23,7 +23,7 @@ with open('requirements.txt') as f:
 setuptools.setup(
     name='e-x',
     version=version,
-    scripts=['electrumx_server', 'electrumx_rpc', 'electrumx_compact_history'],
+    scripts=['electrumz_server', 'electrumz_rpc', 'electrumz_compact_history'],
     python_requires='>=3.8',
     install_requires=requirements,
     extras_require={
@@ -43,14 +43,14 @@ setuptools.setup(
         'bell-yespower': ['bell-yespower'],
         'cpupower': ['cpupower'],
     },
-    packages=setuptools.find_packages(include=('electrumx*',)),
-    description='ElectrumX Server',
-    author='Electrum developers',
-    author_email='electrumdev@gmail.com',
+    packages=setuptools.find_packages(include=('electrumz*',)),
+    description='ElectrumZ Server',
+    author='BTCZCommunity',
+    author_email='',
     license='MIT Licence',
-    url='https://github.com/spesmilo/electrumx',
+    url='https://github.com/btcz/electrumz-server',
     long_description='Server implementation for the Electrum protocol',
-    download_url=('https://github.com/spesmilo/electrumX/archive/'
+    download_url=('https://github.com/btcz/electrumz-server/archive/'
                   f'{version}.tar.gz'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',

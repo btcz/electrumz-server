@@ -1,8 +1,8 @@
 import pytest
 import os
 
-from electrumx.server.storage import Storage, db_class
-from electrumx.lib.util import subclasses
+from electrumz.server.storage import Storage, db_class
+from electrumz.lib.util import subclasses
 
 # Find out which db engines to test
 # Those that are not installed will be skipped

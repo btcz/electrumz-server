@@ -21,18 +21,18 @@ from typing import Dict, List, Sequence, Tuple, Optional, TYPE_CHECKING
 import attr
 from aiorpcx import run_in_thread, sleep
 
-import electrumx.lib.util as util
-from electrumx.lib.hash import hash_to_hex_str, HASHX_LEN
-from electrumx.lib.merkle import Merkle, MerkleCache
-from electrumx.lib.util import (
+import electrumz.lib.util as util
+from electrumz.lib.hash import hash_to_hex_str, HASHX_LEN
+from electrumz.lib.merkle import Merkle, MerkleCache
+from electrumz.lib.util import (
     formatted_time, pack_be_uint16, pack_be_uint32, pack_le_uint64, pack_le_uint32,
     unpack_le_uint32, unpack_be_uint32, unpack_le_uint64
 )
-from electrumx.server.storage import db_class, Storage
-from electrumx.server.history import History, TXNUM_LEN
+from electrumz.server.storage import db_class, Storage
+from electrumz.server.history import History, TXNUM_LEN
 
 if TYPE_CHECKING:
-    from electrumx.server.env import Env
+    from electrumz.server.env import Env
 
 
 @dataclass(order=True)
@@ -160,7 +160,7 @@ class DB:
             self.logger.info('creating metadata directory')
             os.mkdir('meta')
             with util.open_file('COIN', create=True) as f:
-                f.write(f'ElectrumX databases and metadata for '
+                f.write(f'ElectrumZ databases and metadata for '
                         f'{self.coin.NAME} {self.coin.NET}'.encode())
             if not self.coin.STATIC_BLOCK_HEADERS:
                 self.headers_offsets_file.write(0, b'\0\0\0\0\0\0\0\0')

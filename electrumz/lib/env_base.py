@@ -7,10 +7,10 @@
 
 '''Class for server environment configuration and defaults.'''
 
-
+import sys
 from os import environ
 
-from electrumx.lib.util import class_logger
+from electrumz.lib.util import class_logger
 
 
 class EnvBase:
@@ -76,4 +76,7 @@ class EnvBase:
         if policy == 'uvloop':
             import uvloop
             return uvloop.EventLoopPolicy()
+        if sys.platform == 'win32':
+            import asyncio.windows_events
+            return asyncio.WindowsSelectorEventLoopPolicy()
         raise self.Error(f'unknown event loop policy "{policy}"')

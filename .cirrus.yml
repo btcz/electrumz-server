@@ -43,7 +43,7 @@ unittests_task:
     - pip install cpupower
     - pip install bitweb_yespower==1.0.5
   script:
-    - pytest --cov=electrumx
+    - pytest --cov=electrumz
   coveralls_script:
     - if [ ! -z "$COVERALLS_REPO_TOKEN" ] ; then coveralls ; fi
   env:
@@ -64,12 +64,12 @@ pycodestyle_task:
   install_script:
     - pip install pycodestyle
   script:
-    - pycodestyle --max-line-length=100 electrumx/server/*.py electrumx/lib/*.py *.py
+    - pycodestyle --max-line-length=100 electrumz/server/*.py electrumz/lib/*.py *.py
 
 build_docs_task:
   # note: this build task is not related to read-the-docs; it is only here to sanity-check the docs can be built.
   #       For the read-the-docs build, see .readthedocs.yml
-  #       and the webhook set up in https://github.com/spesmilo/electrumx/settings/hooks
+  #       and the webhook set up in https://github.com/btcz/electrumz/settings/hooks
   container:
     image: python:3.11
     cpu: 1

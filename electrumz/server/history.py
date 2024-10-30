@@ -15,13 +15,13 @@ from array import array
 from collections import defaultdict
 from typing import TYPE_CHECKING, Type, Optional
 
-import electrumx.lib.util as util
-from electrumx.lib.hash import HASHX_LEN, hash_to_hex_str
-from electrumx.lib.util import (pack_be_uint16, pack_le_uint64,
+import electrumz.lib.util as util
+from electrumz.lib.hash import HASHX_LEN, hash_to_hex_str
+from electrumz.lib.util import (pack_be_uint16, pack_le_uint64,
                                 unpack_be_uint16_from, unpack_le_uint64)
 
 if TYPE_CHECKING:
-    from electrumx.server.storage import Storage
+    from electrumz.server.storage import Storage
 
 
 TXNUM_LEN = 5

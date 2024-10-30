@@ -15,21 +15,21 @@ from typing import Sequence, Tuple, List, Callable, Optional, TYPE_CHECKING, Typ
 
 from aiorpcx import run_in_thread, CancelledError
 
-import electrumx
-from electrumx.server.daemon import DaemonError, Daemon
-from electrumx.lib.hash import hash_to_hex_str, HASHX_LEN
-from electrumx.lib.script import is_unspendable_legacy, is_unspendable_genesis
-from electrumx.lib.util import (
+import electrumz
+from electrumz.server.daemon import DaemonError, Daemon
+from electrumz.lib.hash import hash_to_hex_str, HASHX_LEN
+from electrumz.lib.script import is_unspendable_legacy, is_unspendable_genesis
+from electrumz.lib.util import (
     chunks, class_logger, pack_le_uint32, pack_le_uint64, unpack_le_uint64, OldTaskGroup
 )
-from electrumx.lib.tx import Tx
-from electrumx.server.db import FlushData, COMP_TXID_LEN, DB
-from electrumx.server.history import TXNUM_LEN
+from electrumz.lib.tx import Tx
+from electrumz.server.db import FlushData, COMP_TXID_LEN, DB
+from electrumz.server.history import TXNUM_LEN
 
 if TYPE_CHECKING:
-    from electrumx.lib.coins import Coin
-    from electrumx.server.env import Env
-    from electrumx.server.controller import Notifications
+    from electrumz.lib.coins import Coin
+    from electrumz.server.env import Env
+    from electrumz.server.controller import Notifications
 
 
 class Prefetcher:
@@ -679,7 +679,7 @@ class BlockProcessor:
         self.db.first_sync = False
         await self.flush(True)
         if first_sync:
-            self.logger.info(f'{electrumx.version} synced to '
+            self.logger.info(f'{electrumz.version} synced to '
                              f'height {self.height:,d}')
         # Reopen for serving
         await self.db.open_for_serving()

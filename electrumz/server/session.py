@@ -27,23 +27,23 @@ from aiorpcx import (Event, JSONRPCAutoDetect, JSONRPCConnection,
                      handler_invocation, serve_rs, serve_ws, sleep,
                      NewlineFramer, TaskTimeout, timeout_after, run_in_thread)
 
-import electrumx
-import electrumx.lib.util as util
-from electrumx.lib.lrucache import LRUCache
-from electrumx.lib.util import OldTaskGroup
-from electrumx.lib.hash import (HASHX_LEN, Base58Error, hash_to_hex_str,
+import electrumz
+import electrumz.lib.util as util
+from electrumz.lib.lrucache import LRUCache
+from electrumz.lib.util import OldTaskGroup
+from electrumz.lib.hash import (HASHX_LEN, Base58Error, hash_to_hex_str,
                                 hex_str_to_hash, sha256)
-from electrumx.lib.merkle import MerkleCache
-from electrumx.lib.text import sessions_lines
-from electrumx.server.daemon import DaemonError
-from electrumx.server.peers import PeerManager
+from electrumz.lib.merkle import MerkleCache
+from electrumz.lib.text import sessions_lines
+from electrumz.server.daemon import DaemonError
+from electrumz.server.peers import PeerManager
 
 if TYPE_CHECKING:
-    from electrumx.server.db import DB
-    from electrumx.server.env import Env
-    from electrumx.server.block_processor import BlockProcessor
-    from electrumx.server.daemon import Daemon
-    from electrumx.server.mempool import MemPool
+    from electrumz.server.db import DB
+    from electrumz.server.env import Env
+    from electrumz.server.block_processor import BlockProcessor
+    from electrumz.server.daemon import Daemon
+    from electrumz.server.mempool import MemPool
 
 
 BAD_REQUEST = 1
@@ -340,7 +340,7 @@ class SessionManager:
                 self._tx_hashes_lookups, self._tx_hashes_hits, len(self._tx_hashes_cache)),
             'txs sent': self.txs_sent,
             'uptime': util.formatted_time(time.time() - self.start_time),
-            'version': electrumx.version,
+            'version': electrumz.version,
         }
 
     def _session_data(self, for_log):
@@ -974,7 +974,7 @@ class SessionBase(RPCSession):
         return await coro
 
 
-class ElectrumX(SessionBase):
+class ElectrumZ(SessionBase):
     '''A TCP server that handles incoming Electrum connections.'''
 
     PROTOCOL_MIN = (1, 4)
@@ -1009,7 +1009,7 @@ class ElectrumX(SessionBase):
         return {
             'hosts': hosts_dict,
             'pruning': None,
-            'server_version': electrumx.version,
+            'server_version': electrumz.version,
             'protocol_min': min_str,
             'protocol_max': max_str,
             'genesis_hash': env.coin.GENESIS_HASH,
@@ -1024,7 +1024,7 @@ class ElectrumX(SessionBase):
     @classmethod
     def server_version_args(cls):
         '''The arguments to a server.version RPC call to a peer.'''
-        return [electrumx.version, cls.protocol_min_max_strings()]
+        return [electrumz.version, cls.protocol_min_max_strings()]
 
     def protocol_version_string(self):
         return util.version_string(self.protocol_tuple)
@@ -1303,8 +1303,8 @@ class ElectrumX(SessionBase):
         revision //= 100
         daemon_version = f'{major:d}.{minor:d}.{revision:d}'
         for pair in [
-                ('$SERVER_VERSION', electrumx.version_short),
-                ('$SERVER_SUBVERSION', electrumx.version),
+                ('$SERVER_VERSION', electrumz.version_short),
+                ('$SERVER_SUBVERSION', electrumz.version),
                 ('$DAEMON_VERSION', daemon_version),
                 ('$DAEMON_SUBVERSION', network_info['subversion']),
                 ('$DONATION_ADDRESS', self.env.donation_address),
@@ -1319,7 +1319,7 @@ class ElectrumX(SessionBase):
 
     async def banner(self):
         '''Return the server banner text.'''
-        banner = f'You are connected to an {electrumx.version} server.'
+        banner = f'You are connected to an {electrumz.version} server.'
         self.bump_cost(0.5)
 
         if self.is_tor():
@@ -1427,7 +1427,7 @@ class ElectrumX(SessionBase):
                 BAD_REQUEST, f'unsupported protocol version: {protocol_version}'))
         self.set_request_handlers(ptuple)
 
-        return electrumx.version, self.protocol_version_string()
+        return electrumz.version, self.protocol_version_string()
 
     async def crash_old_client(self, ptuple, crash_client_ver):
         if crash_client_ver:
@@ -1573,227 +1573,10 @@ class LocalRPC(SessionBase):
         return 'RPC'
 
 
-class DashElectrumX(ElectrumX):
-    '''A TCP server that handles incoming Electrum Dash connections.'''
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.mns = set()
-        self.mn_cache_height = 0
-        self.mn_cache = []
-
-    def set_request_handlers(self, ptuple):
-        super().set_request_handlers(ptuple)
-        self.request_handlers.update({
-            'masternode.announce.broadcast':
-            self.masternode_announce_broadcast,
-            'masternode.subscribe': self.masternode_subscribe,
-            'masternode.list': self.masternode_list,
-            'protx.diff': self.protx_diff,
-            'protx.info': self.protx_info,
-        })
-
-    async def _notify_inner(self, touched, height_changed):
-        '''Notify the client about changes in masternode list.'''
-        await super()._notify_inner(touched, height_changed)
-        for mn in self.mns.copy():
-            status = await self.daemon_request('masternode_list',
-                                               ('status', mn))
-            await self.send_notification('masternode.subscribe',
-                                         (mn, status.get(mn)))
-
-    # Masternode command handlers
-    async def masternode_announce_broadcast(self, signmnb):
-        '''Pass through the masternode announce message to be broadcast
-        by the daemon.
-
-        signmnb: signed masternode broadcast message.'''
-        try:
-            return await self.daemon_request('masternode_broadcast',
-                                             ('relay', signmnb))
-        except DaemonError as e:
-            error, = e.args
-            message = error['message']
-            self.logger.info(f'masternode_broadcast: {message}')
-            raise RPCError(BAD_REQUEST, 'the masternode broadcast was '
-                           f'rejected.\n\n{message}\n[{signmnb}]')
-
-    async def masternode_subscribe(self, collateral):
-        '''Returns the status of masternode.
-
-        collateral: masternode collateral.
-        '''
-        result = await self.daemon_request('masternode_list',
-                                           ('status', collateral))
-        if result is not None:
-            self.mns.add(collateral)
-            return result.get(collateral)
-        return None
-
-    async def masternode_list(self, payees):
-        '''
-        Returns the list of masternodes.
-
-        payees: a list of masternode payee addresses.
-        '''
-        if not isinstance(payees, list):
-            raise RPCError(BAD_REQUEST, 'expected a list of payees')
-
-        def get_masternode_payment_queue(mns):
-            '''Returns the calculated position in the payment queue for all the
-            valid masterernodes in the given mns list.
-
-            mns: a list of masternodes information.
-            '''
-            now = int(datetime.datetime.utcnow().strftime("%s"))
-            mn_queue = []
-
-            # Only ENABLED masternodes are considered for the list.
-            for line in mns:
-                mnstat = mns[line].split()
-                if mnstat[0] == 'ENABLED':
-                    # if last paid time == 0
-                    if int(mnstat[5]) == 0:
-                        # use active seconds
-                        mnstat.append(int(mnstat[4]))
-                    else:
-                        # now minus last paid
-                        delta = now - int(mnstat[5])
-                        # if > active seconds, use active seconds
-                        if delta >= int(mnstat[4]):
-                            mnstat.append(int(mnstat[4]))
-                        # use active seconds
-                        else:
-                            mnstat.append(delta)
-                    mn_queue.append(mnstat)
-            mn_queue = sorted(mn_queue, key=lambda x: x[8], reverse=True)
-            return mn_queue
-
-        def get_payment_position(payment_queue, address):
-            '''
-            Returns the position of the payment list for the given address.
-
-            payment_queue: position in the payment queue for the masternode.
-            address: masternode payee address.
-            '''
-            position = -1
-            for pos, mn in enumerate(payment_queue, start=1):
-                if mn[2] == address:
-                    position = pos
-                    break
-            return position
-
-        # Accordingly with the masternode payment queue, a custom list
-        # with the masternode information including the payment
-        # position is returned.
-        cache = self.session_mgr.mn_cache
-        if not cache or self.session_mgr.mn_cache_height != self.db.db_height:
-            full_mn_list = await self.daemon_request('masternode_list',
-                                                     ('full',))
-            mn_payment_queue = get_masternode_payment_queue(full_mn_list)
-            mn_payment_count = len(mn_payment_queue)
-            mn_list = []
-            for key, value in full_mn_list.items():
-                mn_data = value.split()
-                mn_info = {
-                    'vin': key,
-                    'status': mn_data[0],
-                    'protocol': mn_data[1],
-                    'payee': mn_data[2],
-                    'lastseen': mn_data[3],
-                    'activeseconds': mn_data[4],
-                    'lastpaidtime': mn_data[5],
-                    'lastpaidblock': mn_data[6],
-                    'ip': mn_data[7]
-                }
-                mn_info['paymentposition'] = get_payment_position(
-                    mn_payment_queue, mn_info['payee']
-                )
-                mn_info['inselection'] = (
-                    mn_info['paymentposition'] < mn_payment_count // 10
-                )
-                hashX = self.coin.address_to_hashX(mn_info['payee'])
-                balance = await self.get_balance(hashX)
-                mn_info['balance'] = (sum(balance.values())
-                                      / self.coin.VALUE_PER_COIN)
-                mn_list.append(mn_info)
-            cache.clear()
-            cache.extend(mn_list)
-            self.session_mgr.mn_cache_height = self.db.db_height
-
-        # If payees is an empty list the whole masternode list is returned
-        if payees:
-            return [mn for mn in cache if mn['payee'] in payees]
-        else:
-            return cache
-
-    async def protx_diff(self, base_height, height):
-        '''
-        Calculates a diff between two deterministic masternode lists.
-        The result also contains proof data.
-
-        base_height: The starting block height (starting from 1).
-        height: The ending block height.
-        '''
-        if not isinstance(base_height, int) or not isinstance(height, int):
-            raise RPCError(BAD_REQUEST, 'expected a int block heights')
-
-        max_height = self.db.db_height
-        if (not 1 <= base_height <= max_height or
-                not base_height <= height <= max_height):
-            raise RPCError(BAD_REQUEST,
-                           f'require 1 <= base_height {base_height:,d} <= '
-                           f'height {height:,d} <= '
-                           f'chain height {max_height:,d}')
-
-        return await self.daemon_request('protx',
-                                         ('diff', base_height, height))
-
-    async def protx_info(self, protx_hash):
-        '''
-        Returns detailed information about a deterministic masternode.
-
-        protx_hash: The hash of the initial ProRegTx
-        '''
-        if not isinstance(protx_hash, str):
-            raise RPCError(BAD_REQUEST, 'expected protx hash string')
-
-        res = await self.daemon_request('protx', ('info', protx_hash))
-        if 'wallet' in res:
-            del res['wallet']
-        return res
 
 
-class SmartCashElectrumX(DashElectrumX):
-    '''A TCP server that handles incoming Electrum-SMART connections.'''
 
-    def set_request_handlers(self, ptuple):
-        super().set_request_handlers(ptuple)
-        self.request_handlers.update({
-            'smartrewards.current': self.smartrewards_current,
-            'smartrewards.check': self.smartrewards_check
-        })
-
-    async def smartrewards_current(self):
-        '''Returns the current smartrewards info.'''
-        result = await self.daemon_request('smartrewards', ('current',))
-        if result is not None:
-            return result
-        return None
-
-    async def smartrewards_check(self, addr):
-        '''
-        Returns the status of an address
-
-        addr: a single smartcash address
-        '''
-        result = await self.daemon_request('smartrewards', ('check', addr))
-        if result is not None:
-            return result
-        return None
-
-
-class AuxPoWElectrumX(ElectrumX):
+class AuxPoWElectrumZ(ElectrumZ):
     async def block_header(self, height, cp_height=0):
         result = await super().block_header(height, cp_height)
 
@@ -1838,7 +1621,7 @@ class AuxPoWElectrumX(ElectrumX):
         return headers.hex()
 
 
-class NameIndexElectrumX(ElectrumX):
+class NameIndexElectrumZ(ElectrumZ):
     def set_request_handlers(self, ptuple):
         super().set_request_handlers(ptuple)
 
@@ -1882,5 +1665,5 @@ class NameIndexElectrumX(ElectrumX):
         return {scripthash: trimmed_history}
 
 
-class NameIndexAuxPoWElectrumX(NameIndexElectrumX, AuxPoWElectrumX):
+class NameIndexAuxPoWElectrumZ(NameIndexElectrumZ, AuxPoWElectrumZ):
     pass

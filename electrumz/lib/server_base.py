@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING
 
 from aiorpcx import spawn
 
-from electrumx.lib.util import class_logger
+from electrumz.lib.util import class_logger
 
 if TYPE_CHECKING:
-    from electrumx.server.env import Env
+    from electrumz.server.env import Env
 
 
 class ServerBase:
@@ -85,17 +85,17 @@ class ServerBase:
             return
         loop.default_exception_handler(context)
 
+        
+
     async def run(self):
         '''Run the server application:
 
         - record start time
-        - install SIGINT and SIGTERM handlers to trigger shutdown_event
         - set loop's exception handler to suppress unwanted messages
         - run the event loop until serve() completes
         '''
         def on_signal(signame):
-            shutdown_event.set()
-            self.logger.warning(f'received {signame} signal, initiating shutdown')
+            self.logger.warning(f'received {signame} signal, ignoring it')
 
         async def serve():
             try:
@@ -116,13 +116,17 @@ class ServerBase:
 
         # Start serving and wait for shutdown, log receipt of the event
         server_task = await spawn(serve, daemon=True)
+
+        # Instead of waiting for shutdown_event, keep running
+        self.logger.info('Server is running, ignoring shutdown signals.')
         try:
-            await shutdown_event.wait()
+            while True:
+                await asyncio.sleep(1)  # Keep the event loop running
         except KeyboardInterrupt:
-            self.logger.warning('received keyboard interrupt, initiating shutdown')
+            self.logger.warning('received keyboard interrupt, ignoring it')
 
+        # Clean up when you're ready to shut down
         self.logger.info('shutting down')
-
         server_task.cancel()
         try:
             with suppress(asyncio.CancelledError):

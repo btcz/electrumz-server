@@ -30,7 +30,7 @@ from math import ceil, log
 
 from aiorpcx import Event
 
-from electrumx.lib.hash import double_sha256
+from electrumz.lib.hash import double_sha256
 
 
 class Merkle:

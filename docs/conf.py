@@ -15,13 +15,13 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
-VERSION="ElectrumX 1.16.0"
+VERSION="ElectrumZ 1.16.0"
 
 # -- Project information -----------------------------------------------------
 
-project = 'ElectrumX'
-copyright = '2016-2020, various'
-author = 'Electrum developers'
+project = 'ElectrumZ'
+copyright = '2024, various'
+author = 'BTCZCommunity'
 
 # The full version including branding
 release = VERSION
@@ -83,7 +83,7 @@ html_theme = 'alabaster'
 html_theme_options = {
     'description': 'Lightweight Electrum Server in Python',
     'github_user': 'spesmilo',
-    'github_repo': 'electrumx',
+    'github_repo': 'electrumz-server',
     'github_button': True,
     'github_type': 'star',
     'github_banner': True,

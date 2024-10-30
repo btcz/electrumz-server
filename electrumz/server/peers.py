@@ -22,12 +22,12 @@ from aiorpcx import (Event, Notification, RPCSession, SOCKSError,
                      handler_invocation, ignore_after, sleep)
 from aiorpcx.jsonrpc import CodeMessageError
 
-from electrumx.lib.peer import Peer
-from electrumx.lib.util import class_logger, json_deserialize, OldTaskGroup
+from electrumz.lib.peer import Peer
+from electrumz.lib.util import class_logger, json_deserialize, OldTaskGroup
 
 if TYPE_CHECKING:
-    from electrumx.server.env import Env
-    from electrumx.server.db import DB
+    from electrumz.server.env import Env
+    from electrumz.server.db import DB
 
 
 PEER_GOOD, PEER_STALE, PEER_NEVER, PEER_BAD = range(4)

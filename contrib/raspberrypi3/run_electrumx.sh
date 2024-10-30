@@ -1,17 +1,17 @@
 #!/bin/sh
 ###############
-# run_electrumx
+# run_electrumz
 ###############
 
-# configure electrumx
+# configure electrumz
 export COIN=Bitcoin
 export DAEMON_URL=http://rpcuser:rpcpassword@127.0.0.1
 export NET=mainnet
 export CACHE_MB=400
-export DB_DIRECTORY=/home/username/.electrumx/db
-export SSL_CERTFILE=/home/username/.electrumx/certfile.crt
-export SSL_KEYFILE=/home/username/.electrumx/keyfile.key
-export BANNER_FILE=/home/username/.electrumx/banner
+export DB_DIRECTORY=/home/username/.electrumz/db
+export SSL_CERTFILE=/home/username/.electrumz/certfile.crt
+export SSL_KEYFILE=/home/username/.electrumz/keyfile.key
+export BANNER_FILE=/home/username/.electrumz/banner
 export DONATION_ADDRESS=your-donation-address
 
 # connectivity
@@ -23,13 +23,13 @@ export SSL_PORT=50002
 export REPORT_HOST=hostname.com
 export RPC_PORT=8000
 
-# run electrumx
+# run electrumz
 ulimit -n 10000
-/usr/local/bin/electrumx_server 2>> /home/username/.electrumx/electrumx.log >> /home/username/.electrumx/electrumx.log &
+/usr/local/bin/electrumz_server 2>> /home/username/.electrumz/electrumz.log >> /home/username/.electrumz/electrumz.log &
 
 ######################
-# auto-start electrumx
+# auto-start electrumz
 ######################
 
 # add this line to crontab -e
-# @reboot /path/to/run_electrumx.sh
+# @reboot /path/to/run_electrumz.sh

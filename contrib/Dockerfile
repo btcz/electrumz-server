@@ -1,4 +1,4 @@
-# example of Dockerfile that installs spesmilo electrumx 1.16.0
+# example of Dockerfile that installs spesmilo electrumz 1.16.0
 # ENV variables can be overridden on the `docker run` command
 
 FROM python:3.9.16-bullseye AS builder
@@ -25,7 +25,7 @@ RUN apt-get update \
 
 ENV SERVICES="tcp://:50001"
 ENV COIN=Bitcoin
-ENV DB_DIRECTORY=/var/lib/electrumx
+ENV DB_DIRECTORY=/var/lib/electrumz
 ENV DAEMON_URL="http://username:password@hostname:port/"
 ENV ALLOW_ROOT=true
 ENV DB_ENGINE=rocksdb
@@ -36,13 +36,13 @@ ENV CACHE_MB=2000
 WORKDIR /usr/src/app
 COPY --from=builder /usr/src/app .
 
-VOLUME /var/lib/electrumx
+VOLUME /var/lib/electrumz
 
 RUN mkdir -p "$DB_DIRECTORY" && ulimit -n 1048576
 
-CMD ["/usr/src/app/venv/bin/python", "/usr/src/app/venv/bin/electrumx_server"]
+CMD ["/usr/src/app/venv/bin/python", "/usr/src/app/venv/bin/electrumz_server"]
 
-# build it with eg.: `docker build -t electrumx .`
+# build it with eg.: `docker build -t electrumz .`
 # run it with eg.:
-# `docker run -d --net=host -v /home/electrumx/db/:/var/lib/electrumx -e DAEMON_URL="http://youruser:yourpass@localhost:8332" -e REPORT_SERVICES=tcp://example.com:50001 electrumx`
+# `docker run -d --net=host -v /home/electrumz/db/:/var/lib/electrumz -e DAEMON_URL="http://youruser:yourpass@localhost:8332" -e REPORT_SERVICES=tcp://example.com:50001 electrumz`
 # for a clean shutdown, send TERM signal to the running container eg.: `docker kill --signal="TERM" CONTAINER_ID`

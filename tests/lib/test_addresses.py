@@ -26,7 +26,7 @@
 
 import pytest
 
-import electrumx.lib.coins as coins
+import electrumz.lib.coins as coins
 
 addresses = [
     (coins.BitcoinCash, "13xDKJbjh4acmLpNVr6Lc9hFcXRr9fyt4x",
