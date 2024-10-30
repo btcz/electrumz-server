@@ -94,7 +94,7 @@ class ServerBase:
         - set loop's exception handler to suppress unwanted messages
         - run the event loop until serve() completes
         '''
-        def on_signal(signame):
+        def on_sigterm(signame):
             self.logger.warning(f'received {signame} signal, ignoring it')
 
         async def serve():
@@ -109,21 +109,22 @@ class ServerBase:
 
         if platform.system() != 'Windows':
             # No signals on Windows
-            for signame in ('SIGINT', 'SIGTERM'):
-                loop.add_signal_handler(getattr(signal, signame),
-                                        partial(on_signal, signame))
+            # Ignore SIGTERM and handle SIGINT normally
+            loop.add_signal_handler(signal.SIGTERM, partial(on_sigterm, 'SIGTERM'))
+            loop.add_signal_handler(signal.SIGINT, lambda: self.logger.warning('received SIGINT signal, shutting down'))
+
         loop.set_exception_handler(self.on_exception)
 
         # Start serving and wait for shutdown, log receipt of the event
         server_task = await spawn(serve, daemon=True)
 
         # Instead of waiting for shutdown_event, keep running
-        self.logger.info('Server is running, ignoring shutdown signals.')
+        self.logger.info('Server is running, ignoring SIGTERM signal.')
         try:
             while True:
                 await asyncio.sleep(1)  # Keep the event loop running
         except KeyboardInterrupt:
-            self.logger.warning('received keyboard interrupt, ignoring it')
+            self.logger.warning('received keyboard interrupt, shutting down')
 
         # Clean up when you're ready to shut down
         self.logger.info('shutting down')
