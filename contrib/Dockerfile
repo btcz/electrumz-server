@@ -12,7 +12,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 
-RUN git clone https://github.com/ezzygarmyz/electrumz-server.git /opt/electrumz
+RUN git clone https://github.com/btcz/electrumz-server.git /opt/electrumz
 
 
 RUN python3 -m venv /opt/electrumz/env && \
